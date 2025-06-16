@@ -1,16 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Search,
-  MapPin,
-  Phone,
-  Clock,
-  Star,
+  Filter,
   Utensils,
-  Car,
-  Package,
-  Calendar
+  Search,
+  ChefHat,
+  Coffee,
+  Pizza,
+  Fish,
+  Sandwich,
+  Cake,
+  Package
 } from 'lucide-react';
-import './Home.css';
+import './Categories.css';
 
 const mockRestaurants = [
   {
@@ -348,39 +349,76 @@ const mockRestaurants = [
     ]
   }
 ];
-
-const Homepage = () => {
+const Categories = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todos');
+  const [sortBy, setSortBy] = useState('name'); // name, dishCount, alphabetical
 
-  const searchResults = useMemo(() => {
-    if (!searchTerm.trim()) return [];
-
-    const results = [];
-    const searchLower = searchTerm.toLowerCase().trim();
+  // Obtener todas las categorías únicas con información adicional
+  const categoriesData = useMemo(() => {
+    const categoriesMap = new Map();
 
     mockRestaurants.forEach(restaurant => {
-      const restaurantMatches =
-        restaurant.data.specialty.toLowerCase().includes(searchLower) ||
-        restaurant.data.name.toLowerCase().includes(searchLower);
+      restaurant.dishes.forEach(dish => {
+        const category = dish.data.category;
+        
+        if (!categoriesMap.has(category)) {
+          categoriesMap.set(category, {
+            name: category,
+            dishes: [],
+            restaurants: new Set(),
+            minPrice: Infinity,
+            maxPrice: 0
+          });
+        }
 
-      const matchingDishes = restaurant.dishes.filter(dish =>
-        dish.data.name.toLowerCase().includes(searchLower) ||
-        dish.data.description.toLowerCase().includes(searchLower) ||
-        dish.data.category.toLowerCase().includes(searchLower)
-      );
-
-      if (restaurantMatches || matchingDishes.length > 0) {
-        results.push({
-          restaurant: restaurant.data,
-          dishes: matchingDishes.length > 0 ? matchingDishes : restaurant.dishes.slice(0, 3),
-          matchType: restaurantMatches ? 'restaurant' : 'dish'
+        const categoryData = categoriesMap.get(category);
+        categoryData.dishes.push({
+          ...dish,
+          restaurantName: restaurant.data.name,
+          restaurantSpecialty: restaurant.data.specialty
         });
-      }
+        categoryData.restaurants.add(restaurant.data.name);
+        categoryData.minPrice = Math.min(categoryData.minPrice, dish.data.price);
+        categoryData.maxPrice = Math.max(categoryData.maxPrice, dish.data.price);
+      });
     });
 
-    return results;
-  }, [searchTerm]);
+    return Array.from(categoriesMap.values()).map(category => ({
+      ...category,
+      restaurantCount: category.restaurants.size,
+      dishCount: category.dishes.length,
+      avgPrice: Math.round(category.dishes.reduce((sum, dish) => sum + dish.data.price, 0) / category.dishes.length)
+    }));
+  }, []);
+
+  // Filtrar y ordenar categorías
+  const filteredAndSortedCategories = useMemo(() => {
+    let filtered = categoriesData;
+
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = categoriesData.filter(category =>
+        category.name.toLowerCase().includes(searchLower) ||
+        category.dishes.some(dish => 
+          dish.data.name.toLowerCase().includes(searchLower) ||
+          dish.data.description.toLowerCase().includes(searchLower)
+        )
+      );
+    }
+
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'dishCount':
+          return b.dishCount - a.dishCount;
+        case 'price':
+          return a.avgPrice - b.avgPrice;
+        default:
+          return 0;
+      }
+    });
+  }, [categoriesData, searchTerm, sortBy]);
 
   const formatPrice = price =>
     new Intl.NumberFormat('es-CL', {
@@ -389,165 +427,141 @@ const Homepage = () => {
       minimumFractionDigits: 0
     }).format(price);
 
-  const getServiceIcons = services => {
-    const icons = [];
-    services.forEach(service => {
-      if (service.delivery) icons.push({ icon: Package, label: 'Delivery' });
-      if (service.takeOut) icons.push({ icon: Utensils, label: 'Para llevar' });
-      if (service.booking) icons.push({ icon: Calendar, label: 'Reservas' });
-      if (service.parking) icons.push({ icon: Car, label: 'Estacionamiento' });
-    });
-    return icons;
+  const getCategoryIcon = (categoryName) => {
+    const iconMap = {
+      'Platos de Fondo': ChefHat,
+      'Entradas': Package,
+      'Hamburguesas': Utensils,
+      'Pizzas': Pizza,
+      'Sándwiches': Sandwich,
+      'Acompañamientos': Utensils,
+      'Postres': Cake,
+      'Bebidas': Coffee,
+      'Mariscos': Fish
+    };
+    
+    return iconMap[categoryName] || Utensils;
   };
 
   return (
-    <div className="homepage">
-      <div className="hero">
-        <div className="hero-content">
-          <h1 className="hero-title">
-            Encuentra tu{' '}
-            <span className="highlight-text">
-              plato favorito
-            </span>
+    <div className="categories-page">
+      <div className="page-header">
+        <div className="header-content">
+          <h1 className="page-title">
+            <ChefHat className="page-icon" />
+            Categorías
           </h1>
-          <p className="hero-subtitle">
-            Descubre los mejores restaurantes y sus especialidades cerca de ti
+          <p className="page-subtitle">
+            Explora todos los tipos de platos disponibles en nuestros restaurantes
           </p>
+        </div>
+      </div>
+
+      <div className="search-and-filters">
+        <div className="search-section">
           <div className="search-box">
             <Search className="search-icon" />
             <input
               type="text"
-              placeholder="Busca tu plato favorito... ej: papas fritas, cazuela, empanadas"
+              placeholder="Buscar en categorías o platos..."
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
             />
           </div>
-          <div className="suggestions">
-            {[
-              'papas fritas',
-              'cazuela',
-              'empanadas',
-              'lomo',
-              'pastel de choclo',
-              'mariscos'
-            ].map(suggestion => (
-              <button
-                key={suggestion}
-                onClick={() => setSearchTerm(suggestion)}
-                className="suggestion-btn"
-              >
-                {suggestion}
-              </button>
-            ))}
+        </div>
+
+        <div className="filters-section">
+          <div className="filter-group">
+            <Filter className="filter-icon" />
+            <span className="filter-label">Ordenar por:</span>
+            <select 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="filter-select"
+            >
+              <option value="name">Nombre</option>
+              <option value="dishCount">Cantidad de platos</option>
+              <option value="price">Precio promedio</option>
+            </select>
+          </div>
+          <div className="results-count">
+            {filteredAndSortedCategories.length} categoría{filteredAndSortedCategories.length !== 1 ? 's' : ''} encontrada{filteredAndSortedCategories.length !== 1 ? 's' : ''}
           </div>
         </div>
-        <div className="decor-circle decor-yellow"></div>
-        <div className="decor-circle decor-green"></div>
       </div>
 
-      {searchTerm ? (
-        <div className="results-container">
-          <div className="results-header">
-            <h2>Resultados para "{searchTerm}"</h2>
-            <p>
-              {searchResults.length}{' '}
-              {searchResults.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
-            </p>
+      {filteredAndSortedCategories.length === 0 ? (
+        <div className="no-results">
+          <div className="no-results-icon">
+            <Search className="no-results-svg" />
           </div>
-          {searchResults.length === 0 ? (
-            <div className="no-results">
-              <div className="no-results-icon">
-                <Search className="no-results-svg" />
-              </div>
-              <h3>No encontramos resultados</h3>
-              <p>
-                Intenta con otros términos como "cazuela", "empanadas", "papas fritas" o "mariscos"
-              </p>
-            </div>
-          ) : (
-            <div className="results-grid">
-              {searchResults.map((result, idx) => (
-                <div key={idx} className="card">
-                  <div className="card-header">
-                    <div className="card-header-main">
-                      <div className="card-icon-bg">
-                        <Utensils className="card-icon" />
-                      </div>
-                      <div>
-                        <h3 className="restaurant-name">{result.restaurant.name}</h3>
-                        <p className="restaurant-specialty">{result.restaurant.specialty}</p>
-                        <div className="restaurant-info">
-                          <div>
-                            <MapPin className="info-icon" />
-                            {result.restaurant.address}
-                          </div>
-                          <div>
-                            <Clock className="info-icon" />
-                            {result.restaurant.upTime}
-                          </div>
-                          <div>
-                            <Phone className="info-icon" />
-                            {result.restaurant.phone}
-                          </div>
-                        </div>
-                      </div>
+          <h3>No se encontraron categorías</h3>
+          <p>Intenta con otros términos de búsqueda</p>
+        </div>
+      ) : (
+        <div className="categories-grid">
+          {filteredAndSortedCategories.map((category, index) => {
+            const IconComponent = getCategoryIcon(category.name);
+            
+            return (
+              <div key={index} className="category-card">
+                <div className="category-header">
+                  <div className="category-icon-wrapper">
+                    <IconComponent className="category-icon" />
+                  </div>
+                  <div className="category-main-info">
+                    <h2 className="category-name">{category.name}</h2>
+                    <div className="category-stats">
+                      <span className="stat-item">
+                        {category.dishCount} plato{category.dishCount !== 1 ? 's' : ''}
+                      </span>
+                      <span className="stat-separator">•</span>
+                      <span className="stat-item">
+                        {category.restaurantCount} restaurante{category.restaurantCount !== 1 ? 's' : ''}
+                      </span>
                     </div>
-                    <div className="card-header-extra">
-                      <div className="price-range">
-                        ${result.restaurant.priceRange}
-                      </div>
-                      <div className="service-icons">
-                        {getServiceIcons(result.restaurant.services).map((s, i) => (
-                          <div key={i} className="service-icon-wrapper">
-                            <s.icon className="service-icon-svg" />
-                            <div className="tooltip">{s.label}</div>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="price-info">
+                      Desde {formatPrice(category.minPrice)} hasta {formatPrice(category.maxPrice)}
                     </div>
                   </div>
-                  <div className="card-body">
-                    <h4 className="dishes-title">
-                      <Star className="star-svg" />
-                      {result.matchType === 'dish'
-                        ? 'Platos que coinciden'
-                        : 'Platos destacados'}
-                    </h4>
-                    <div className="dishes-grid">
-                      {result.dishes.map(dish => (
-                        <div key={dish.id} className="dish-card">
-                          <div className="dish-header">
-                            <h5>{dish.data.name}</h5>
-                            <span className="dish-price">
-                              {formatPrice(dish.data.price)}
-                            </span>
-                          </div>
-                          <p className="dish-desc">{dish.data.description}</p>
-                          <span className="dish-category">{dish.data.category}</span>
-                        </div>
-                      ))}
+                  <div className="category-summary">
+                    <div className="avg-price">
+                      <span className="avg-price-label">Precio promedio</span>
+                      <span className="avg-price-value">{formatPrice(category.avgPrice)}</span>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="no-search">
-          <div className="no-search-graphic">
-            <Search className="no-search-svg" />
-          </div>
-          <h3>¿Qué tienes ganas de comer hoy?</h3>
-          <p>
-            Usa el buscador para encontrar tus platos favoritos en los mejores
-            restaurantes de la zona
-          </p>
+
+                <div className="category-dishes">
+                  <h3 className="dishes-section-title">Platos Disponibles</h3>
+                  <div className="dishes-grid">
+                    {category.dishes.slice(0, 6).map((dish, dishIndex) => (
+                      <div key={dishIndex} className="dish-card">
+                        <div className="dish-header">
+                          <h4 className="dish-name">{dish.data.name}</h4>
+                          <span className="dish-price">{formatPrice(dish.data.price)}</span>
+                        </div>
+                        <p className="dish-description">{dish.data.description}</p>
+                        <div className="dish-footer">
+                          <span className="restaurant-tag">{dish.restaurantName}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {category.dishes.length > 6 && (
+                    <div className="more-dishes-indicator">
+                      +{category.dishes.length - 6} platos más en esta categoría
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 };
 
-export default Homepage;
+export default Categories;

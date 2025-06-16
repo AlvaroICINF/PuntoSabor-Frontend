@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
-  Search,
   MapPin,
   Phone,
   Clock,
@@ -8,9 +7,12 @@ import {
   Utensils,
   Car,
   Package,
-  Calendar
+  Calendar,
+  Globe,
+  Filter,
+  DollarSign
 } from 'lucide-react';
-import './Home.css';
+import './restaurants.css';
 
 const mockRestaurants = [
   {
@@ -349,38 +351,32 @@ const mockRestaurants = [
   }
 ];
 
-const Homepage = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todos');
+const Restaurants = () => {
+  const [selectedSpecialty, setSelectedSpecialty] = useState('Todos');
+  const [sortBy, setSortBy] = useState('name');
 
-  const searchResults = useMemo(() => {
-    if (!searchTerm.trim()) return [];
+  // Obtener especialidades únicas
+  const specialties = ['Todos', ...new Set(mockRestaurants.map(r => r.data.specialty))];
 
-    const results = [];
-    const searchLower = searchTerm.toLowerCase().trim();
-
-    mockRestaurants.forEach(restaurant => {
-      const restaurantMatches =
-        restaurant.data.specialty.toLowerCase().includes(searchLower) ||
-        restaurant.data.name.toLowerCase().includes(searchLower);
-
-      const matchingDishes = restaurant.dishes.filter(dish =>
-        dish.data.name.toLowerCase().includes(searchLower) ||
-        dish.data.description.toLowerCase().includes(searchLower) ||
-        dish.data.category.toLowerCase().includes(searchLower)
-      );
-
-      if (restaurantMatches || matchingDishes.length > 0) {
-        results.push({
-          restaurant: restaurant.data,
-          dishes: matchingDishes.length > 0 ? matchingDishes : restaurant.dishes.slice(0, 3),
-          matchType: restaurantMatches ? 'restaurant' : 'dish'
-        });
+  // Filtrar y ordenar restaurantes
+  const filteredAndSortedRestaurants = mockRestaurants
+    .filter(restaurant => 
+      selectedSpecialty === 'Todos' || restaurant.data.specialty === selectedSpecialty
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.data.name.localeCompare(b.data.name);
+        case 'specialty':
+          return a.data.specialty.localeCompare(b.data.specialty);
+        case 'price':
+          const priceA = parseInt(a.data.priceRange.split(' - ')[0]);
+          const priceB = parseInt(b.data.priceRange.split(' - ')[0]);
+          return priceA - priceB;
+        default:
+          return 0;
       }
     });
-
-    return results;
-  }, [searchTerm]);
 
   const formatPrice = price =>
     new Intl.NumberFormat('es-CL', {
@@ -401,153 +397,133 @@ const Homepage = () => {
   };
 
   return (
-    <div className="homepage">
-      <div className="hero">
-        <div className="hero-content">
-          <h1 className="hero-title">
-            Encuentra tu{' '}
-            <span className="highlight-text">
-              plato favorito
-            </span>
+    <div className="restaurants-page">
+      <div className="page-header">
+        <div className="header-content">
+          <h1 className="page-title">
+            <Utensils className="page-icon" />
+            Restaurantes
           </h1>
-          <p className="hero-subtitle">
-            Descubre los mejores restaurantes y sus especialidades cerca de ti
+          <p className="page-subtitle">
+            Descubre todos los restaurantes disponibles en Osorno
           </p>
-          <div className="search-box">
-            <Search className="search-icon" />
-            <input
-              type="text"
-              placeholder="Busca tu plato favorito... ej: papas fritas, cazuela, empanadas"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
-          <div className="suggestions">
-            {[
-              'papas fritas',
-              'cazuela',
-              'empanadas',
-              'lomo',
-              'pastel de choclo',
-              'mariscos'
-            ].map(suggestion => (
-              <button
-                key={suggestion}
-                onClick={() => setSearchTerm(suggestion)}
-                className="suggestion-btn"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
         </div>
-        <div className="decor-circle decor-yellow"></div>
-        <div className="decor-circle decor-green"></div>
       </div>
 
-      {searchTerm ? (
-        <div className="results-container">
-          <div className="results-header">
-            <h2>Resultados para "{searchTerm}"</h2>
-            <p>
-              {searchResults.length}{' '}
-              {searchResults.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
-            </p>
+      <div className="filters-section">
+        <div className="filters-container">
+          <div className="filter-group">
+            <Filter className="filter-icon" />
+            <span className="filter-label">Especialidad:</span>
+            <select 
+              value={selectedSpecialty}
+              onChange={(e) => setSelectedSpecialty(e.target.value)}
+              className="filter-select"
+            >
+              {specialties.map(specialty => (
+                <option key={specialty} value={specialty}>
+                  {specialty}
+                </option>
+              ))}
+            </select>
           </div>
-          {searchResults.length === 0 ? (
-            <div className="no-results">
-              <div className="no-results-icon">
-                <Search className="no-results-svg" />
-              </div>
-              <h3>No encontramos resultados</h3>
-              <p>
-                Intenta con otros términos como "cazuela", "empanadas", "papas fritas" o "mariscos"
-              </p>
-            </div>
-          ) : (
-            <div className="results-grid">
-              {searchResults.map((result, idx) => (
-                <div key={idx} className="card">
-                  <div className="card-header">
-                    <div className="card-header-main">
-                      <div className="card-icon-bg">
-                        <Utensils className="card-icon" />
-                      </div>
-                      <div>
-                        <h3 className="restaurant-name">{result.restaurant.name}</h3>
-                        <p className="restaurant-specialty">{result.restaurant.specialty}</p>
-                        <div className="restaurant-info">
-                          <div>
-                            <MapPin className="info-icon" />
-                            {result.restaurant.address}
-                          </div>
-                          <div>
-                            <Clock className="info-icon" />
-                            {result.restaurant.upTime}
-                          </div>
-                          <div>
-                            <Phone className="info-icon" />
-                            {result.restaurant.phone}
-                          </div>
-                        </div>
-                      </div>
+          <div className="filter-group">
+            <span className="filter-label">Ordenar por:</span>
+            <select 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="filter-select"
+            >
+              <option value="name">Nombre</option>
+              <option value="specialty">Especialidad</option>
+              <option value="price">Precio</option>
+            </select>
+          </div>
+        </div>
+        <div className="results-count">
+          {filteredAndSortedRestaurants.length} restaurante{filteredAndSortedRestaurants.length !== 1 ? 's' : ''} encontrado{filteredAndSortedRestaurants.length !== 1 ? 's' : ''}
+        </div>
+      </div>
+
+      <div className="restaurants-grid">
+        {filteredAndSortedRestaurants.map(restaurant => (
+          <div key={restaurant.id} className="restaurant-card">
+            <div className="restaurant-header">
+              <div className="restaurant-main-info">
+                <div className="restaurant-icon-wrapper">
+                  <Utensils className="restaurant-icon" />
+                </div>
+                <div className="restaurant-details">
+                  <h2 className="restaurant-name">{restaurant.data.name}</h2>
+                  <p className="restaurant-specialty">{restaurant.data.specialty}</p>
+                  <div className="restaurant-meta">
+                    <div className="meta-item">
+                      <MapPin className="meta-icon" />
+                      <span>{restaurant.data.address}</span>
                     </div>
-                    <div className="card-header-extra">
-                      <div className="price-range">
-                        ${result.restaurant.priceRange}
-                      </div>
-                      <div className="service-icons">
-                        {getServiceIcons(result.restaurant.services).map((s, i) => (
-                          <div key={i} className="service-icon-wrapper">
-                            <s.icon className="service-icon-svg" />
-                            <div className="tooltip">{s.label}</div>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="meta-item">
+                      <Clock className="meta-icon" />
+                      <span>{restaurant.data.upTime}</span>
                     </div>
-                  </div>
-                  <div className="card-body">
-                    <h4 className="dishes-title">
-                      <Star className="star-svg" />
-                      {result.matchType === 'dish'
-                        ? 'Platos que coinciden'
-                        : 'Platos destacados'}
-                    </h4>
-                    <div className="dishes-grid">
-                      {result.dishes.map(dish => (
-                        <div key={dish.id} className="dish-card">
-                          <div className="dish-header">
-                            <h5>{dish.data.name}</h5>
-                            <span className="dish-price">
-                              {formatPrice(dish.data.price)}
-                            </span>
-                          </div>
-                          <p className="dish-desc">{dish.data.description}</p>
-                          <span className="dish-category">{dish.data.category}</span>
-                        </div>
-                      ))}
+                    <div className="meta-item">
+                      <Phone className="meta-icon" />
+                      <span>{restaurant.data.phone}</span>
                     </div>
+                    {restaurant.data.website && (
+                      <div className="meta-item">
+                        <Globe className="meta-icon" />
+                        <span>{restaurant.data.website}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
+              </div>
+              <div className="restaurant-extras">
+                <div className="price-badge">
+                  <DollarSign className="price-icon" />
+                  <span>${restaurant.data.priceRange}</span>
+                </div>
+                <div className="services-icons">
+                  {getServiceIcons(restaurant.data.services).map((service, idx) => (
+                    <div key={idx} className="service-icon-container">
+                      <service.icon className="service-icon" />
+                      <div className="service-tooltip">{service.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="no-search">
-          <div className="no-search-graphic">
-            <Search className="no-search-svg" />
+
+            <div className="restaurant-menu">
+              <h3 className="menu-title">
+                <Star className="menu-star" />
+                Menú Destacado
+              </h3>
+              <div className="dishes-list">
+                {restaurant.dishes.slice(0, 4).map(dish => (
+                  <div key={dish.id} className="dish-item">
+                    <div className="dish-info">
+                      <h4 className="dish-name">{dish.data.name}</h4>
+                      <p className="dish-description">{dish.data.description}</p>
+                      <span className="dish-category">{dish.data.category}</span>
+                    </div>
+                    <div className="dish-price">
+                      {formatPrice(dish.data.price)}
+                    </div>
+                  </div>
+                ))}
+                {restaurant.dishes.length > 4 && (
+                  <div className="more-dishes">
+                    +{restaurant.dishes.length - 4} platos más
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <h3>¿Qué tienes ganas de comer hoy?</h3>
-          <p>
-            Usa el buscador para encontrar tus platos favoritos en los mejores
-            restaurantes de la zona
-          </p>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 };
 
-export default Homepage;
+export default Restaurants;
