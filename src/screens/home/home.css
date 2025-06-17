@@ -383,3 +383,48 @@
   width: 4rem;
   height: 4rem;
 }
+
+/* Estilos para los botones de acción */
+.restaurant-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.action-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.maps-button {
+  background-color: #e9f5ff;
+  color: #0077ff;
+  border: 1px solid #cce5ff;
+}
+
+.maps-button:hover {
+  background-color: #d0e8ff;
+}
+
+.website-button {
+  background-color: #fff0e5;
+  color: #ff6b35;
+  border: 1px solid #ffe0cc;
+}
+
+.website-button:hover {
+  background-color: #ffe0cc;
+}

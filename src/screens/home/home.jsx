@@ -10,6 +10,7 @@ import {
   Car,
   Package,
   Calendar,
+  ExternalLink,
 } from "lucide-react";
 import "./Home.css";
 
@@ -32,6 +33,11 @@ const Homepage = () => {
 
     fetchRestaurants();
   }, []);
+
+  // Función para generar URL de Google Maps
+  const getGoogleMapsUrl = (address) => {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  };
 
   const searchResults = useMemo(() => {
     if (!searchTerm.trim()) return [];
@@ -64,7 +70,7 @@ const Homepage = () => {
     });
 
     return results;
-  }, [searchTerm]);
+  }, [searchTerm, mockRestaurants]);
 
   const formatPrice = (price) =>
     new Intl.NumberFormat("es-CL", {
@@ -168,7 +174,15 @@ const Homepage = () => {
                         <div className="restaurant-info">
                           <div>
                             <MapPin className="info-icon" />
-                            {result.restaurant.address}
+                            <a 
+                              href={getGoogleMapsUrl(result.restaurant.address)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="address-link"
+                            >
+                              {result.restaurant.address}
+                              <ExternalLink className="external-link-icon" />
+                            </a>
                           </div>
                           <div>
                             <Clock className="info-icon" />
@@ -176,7 +190,12 @@ const Homepage = () => {
                           </div>
                           <div>
                             <Phone className="info-icon" />
-                            {result.restaurant.phone}
+                            <a 
+                              href={`tel:${result.restaurant.phone}`}
+                              className="phone-link"
+                            >
+                              {result.restaurant.phone}
+                            </a>
                           </div>
                         </div>
                       </div>

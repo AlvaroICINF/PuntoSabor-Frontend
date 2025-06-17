@@ -318,13 +318,13 @@ const Categories = () => {
                     {category.dishes.slice(0, 6).map((dish, dishIndex) => (
                       <div key={dishIndex} className="dish-card">
                         <div className="dish-header">
-                          <h4 className="dish-name">{dish.data.name}</h4>
+                          <h4 className="dish-name">{dish.name}</h4>
                           <span className="dish-price">
-                            {formatPrice(dish.data.price)}
+                            {formatPrice(dish.price)}
                           </span>
                         </div>
                         <p className="dish-description">
-                          {dish.data.description}
+                          {dish.description}
                         </p>
                         <div className="dish-footer">
                           <span className="restaurant-tag">

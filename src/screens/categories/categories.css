@@ -168,7 +168,7 @@
 /* Category Header */
 .category-header {
   padding: 2rem;
-  background: var(--background);
+  background: #f9fafb;
   border-bottom: 1px solid var(--background);
   display: flex;
   justify-content: space-between;
