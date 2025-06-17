@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import getRestaurants from "../../constants/api";
+import { getRestaurants } from "../../constants/api";
 import {
   MapPin,
   Phone,

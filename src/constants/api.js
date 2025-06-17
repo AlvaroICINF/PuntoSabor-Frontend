@@ -74,9 +74,18 @@ apiClient.interceptors.response.use(
 );
 
 // ==================== RESTAURANTES ====================
-export default async function getRestaurants() {
+export async function getRestaurants() {
   try {
     const response = await apiClient.get("/restaurants");
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getDishes() {
+  try {
+    const response = await apiClient.get("/dishes");
     return response.data;
   } catch (error) {
     throw error;
