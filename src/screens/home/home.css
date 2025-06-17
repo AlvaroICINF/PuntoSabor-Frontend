@@ -47,7 +47,7 @@
 
 .search-box {
   max-width: 40rem;
-  margin: 0 auto 1rem;
+  margin: 0 auto 1.5rem; /* Aumentado de 1rem a 1.5rem para dar más espacio */
   position: relative;
 }
 
@@ -81,6 +81,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: .5rem;
+  margin-top: 0.5rem; /* Añadido margen superior adicional */
 }
 
 .suggestion-btn {
