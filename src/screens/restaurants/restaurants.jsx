@@ -14,7 +14,7 @@ import {
   DollarSign,
   ChefHat,
   ExternalLink,
-  Search, // Añadir este icono para el buscador
+  Search, 
 } from "lucide-react";
 import "./restaurants.css";
 
@@ -23,8 +23,8 @@ const Restaurants = () => {
   const [sortBy, setSortBy] = useState("name");
   const [mockRestaurants, setMockRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(""); // Nuevo estado para el término de búsqueda
-  const [showOnlyWithWebsite, setShowOnlyWithWebsite] = useState(true); // Nuevo estado para filtrar por sitio web, por defecto true
+  const [searchTerm, setSearchTerm] = useState(""); 
+  const [showOnlyWithWebsite, setShowOnlyWithWebsite] = useState(true); 
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -57,9 +57,7 @@ const Restaurants = () => {
       (restaurant) =>
         (selectedSpecialty === "Todos" ||
         restaurant.data.specialty === selectedSpecialty) &&
-        // Filtrar por término de búsqueda
         restaurant.data.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        // Filtrar por restaurantes con sitio web si está activado
         (!showOnlyWithWebsite || restaurant.data.website)
     )
     .sort((a, b) => {
@@ -115,6 +113,19 @@ const Restaurants = () => {
         </div>
 
         <div className="filters-section">
+          <div className="search-container">
+          <div className="search-box">
+            <Search className="search-icon" />
+            <input
+              type="text"
+              placeholder="Buscar restaurante..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
+        </div>
+
           <div className="filters-container">
             <div className="filter-group">
               <Filter className="filter-icon" />
@@ -144,10 +155,19 @@ const Restaurants = () => {
               </select>
             </div>
           </div>
-          <div className="results-count">
-            {filteredAndSortedRestaurants.length} restaurante
-            {filteredAndSortedRestaurants.length !== 1 ? "s" : ""} encontrado
-            {filteredAndSortedRestaurants.length !== 1 ? "s" : ""}
+          
+          <div className="filter-group website-filter">
+            <input
+              type="checkbox"
+              id="website-filter"
+              checked={showOnlyWithWebsite}
+              onChange={(e) => setShowOnlyWithWebsite(e.target.checked)}
+              className="website-checkbox"
+            />
+            <label htmlFor="website-filter" className="website-label">
+              <Globe className="filter-icon" />
+              Solo con sitio web
+            </label>
           </div>
         </div>
 
@@ -193,13 +213,12 @@ const Restaurants = () => {
       </div>
 
       <div className="filters-section">
-        {/* Añadir el buscador */}
         <div className="search-container">
           <div className="search-box">
             <Search className="search-icon" />
             <input
               type="text"
-              placeholder="Buscar restaurante por nombre..."
+              placeholder="Buscar restaurante..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
